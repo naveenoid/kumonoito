@@ -1,14 +1,12 @@
-#include "drake/examples/kinova_jaco_arm/jaco_common.h"
-
+#include "../include/kumonoito/jaco_common.h"
 #include <map>
 
-#include "drake/multibody/parsers/urdf_parser.h"
+#include <drake/multibody/parsers/urdf_parser.h>
 
 using Eigen::Vector3d;
 using Eigen::VectorXd;
 
-namespace drake {
-namespace examples {
+namespace kumonoito {
 namespace kinova_jaco_arm {
 
 // See the @file docblock in jaco_common.h for joint index descriptions.
@@ -63,5 +61,4 @@ void SetPositionControlledJacoGains(VectorXd* Kp, VectorXd* Ki,
 }
 
 }  // namespace kinova_jaco_arm
-}  // namespace examples
-}  // namespace drake
+}  // namespace kumonoito

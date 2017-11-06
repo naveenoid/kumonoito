@@ -4,6 +4,8 @@ project(kumonoito)
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
+find_package(drake CONFIG REQUIRED)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -13,8 +15,6 @@ find_package(catkin REQUIRED COMPONENTS
   genmsg
   message_generation
 )
-
-find_package(drake CONFIG REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -139,15 +139,16 @@ include_directories(
 add_executable(kumonoito src/kumonoito.cc)
 target_link_libraries(kumonoito drake::drake ${catkin_LIBRARIES})
 add_dependencies(kumonoito beginner_tutorials_generate_messages_cpp)
-#
-#add_executable(talker src/talker.cpp)
-#target_link_libraries(talker ${catkin_LIBRARIES})
-#add_dependencies(talker beginner_tutorials_generate_messages_cpp)
 
 add_executable(listener src/ros_listener.cc)
 target_link_libraries(listener ${catkin_LIBRARIES})
 add_dependencies(listener beginner_tutorials_generate_messages_cpp)
 
+add_library(jaco_common src/jaco_common.cc)
+target_link_libraries(jaco_common drake::drake)
+
+add_executable(jaco_sim src/jaco_simulation_demo.cc)
+target_link_libraries(jaco_sim  jaco_common drake::drake ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries

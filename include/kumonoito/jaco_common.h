@@ -18,10 +18,9 @@
 
 #include <string>
 
-#include "drake/multibody/rigid_body_tree.h"
+#include <drake/multibody/rigid_body_tree.h>
 
-namespace drake {
-namespace examples {
+namespace kumonoito {
 namespace kinova_jaco_arm {
 
 constexpr int kNumDofs = 9;  // degrees of freedom available for the jaco arm
@@ -44,5 +43,4 @@ void SetPositionControlledJacoGains(Eigen::VectorXd* Kp, Eigen::VectorXd* Ki,
                                     Eigen::VectorXd* Kd);
 
 }  // namespace kinova_jaco_arm
-}  // namespace examples
-}  // namespace drake
+}  // namespace kumonoito
