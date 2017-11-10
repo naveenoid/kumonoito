@@ -1,0 +1,8 @@
+<launch>
+  <arg name="urdf_file" default="$(find xacro)/xacro.py '$(find kinova_description)/urdf/j2n6s300_standalone.xacro'" />
+  <param name="robot_description" command="$(arg urdf_file)" />
+  <node name="jaco_sim" pkg="kumonoito" type="jaco_sim" output="screen" />
+  <param name="use_sim_time" value="true"/>
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_pub" />
+  <node pkg="tf" type="static_transform_publisher" name="base_broadcaster" args="1 0 0 0 0 0 1 map world 100" />
+</launch>

@@ -4,7 +4,6 @@ project(kumonoito)
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
-
 find_package(drake CONFIG REQUIRED)
 
 ## Find catkin macros and libraries
@@ -132,23 +131,35 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+add_definitions(-std=c++11)
+
 # Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/kumonoito.cc
 # )
 
-add_executable(kumonoito src/kumonoito.cc)
+add_executable(kumonoito src/ros_demo_publisher.cc)
 target_link_libraries(kumonoito drake::drake ${catkin_LIBRARIES})
 add_dependencies(kumonoito beginner_tutorials_generate_messages_cpp)
-#
-#add_executable(talker src/talker.cpp)
-#target_link_libraries(talker ${catkin_LIBRARIES})
-#add_dependencies(talker beginner_tutorials_generate_messages_cpp)
 
-add_executable(listener src/ros_listener.cc)
+add_executable(listener src/ros_demo_listener.cc)
 target_link_libraries(listener ${catkin_LIBRARIES})
 add_dependencies(listener beginner_tutorials_generate_messages_cpp)
 
+add_library(jaco_common src/jaco_common.cc)
+target_link_libraries(jaco_common drake::drake)
+
+add_library(ros_robot_state_publisher src/ros_robot_state_publisher.cc)
+target_link_libraries(ros_robot_state_publisher
+        drake::drake
+        ${catkin_LIBRARIES})
+
+add_executable(jaco_sim src/jaco_simulation_demo.cc)
+target_link_libraries(jaco_sim
+        jaco_common
+        drake::drake
+        ros_robot_state_publisher
+        ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
