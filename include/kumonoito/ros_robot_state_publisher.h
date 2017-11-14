@@ -8,6 +8,7 @@
 #include <drake/systems/framework/leaf_system.h>
 #include <drake/multibody/rigid_body_tree.h>
 #include <drake/common/eigen_types.h>
+#include <drake/systems/primitives/signal_log.h>
 
 namespace kumonoito {
 
@@ -44,13 +45,19 @@ public:
    */
   void set_publish_period(double period);
 
+  /**
+   * Causes the visualizer to playback its cached data at real time.  If it has
+   * not been configured to record/playback, a warning message will be written
+   * to the log, but otherwise, no work will be done.
+   */
+  void ReplayCachedSimulation() const;
 
   /**
- * Causes the visualizer to playback its cached data at real time.  If it has
- * not been configured to record/playback, a warning message will be written
- * to the log, but otherwise, no work will be done.
- */
-  void ReplayCachedSimulation() const;
+   * Plays back (at real time) a trajectory representing the input signal.
+   */
+  void PlaybackTrajectory(
+      const PiecewisePolynomial<double>& input_trajectory) const;
+
  private:
 
   // Publishes a draw message if initialization is completed. Otherwise, it
@@ -60,12 +67,14 @@ public:
       const std::vector<const drake::systems::PublishEvent<double>*>&)
   const override;
 
+  void PublishRobotStateAndClock(drake::VectorX<double> x, double t) const;
+
   ros::NodeHandle* const node_handle_{};
   ros::Publisher joint_pub_{};
   ros::Publisher clock_pub_{};
   const RigidBodyTree<double>& tree_;
 
-  std::unique_ptr<SignalLog<double>> log_{nullptr};
+  std::unique_ptr<drake::systems::SignalLog<double>> log_{nullptr};
 };
 
 
