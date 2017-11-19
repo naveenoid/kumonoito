@@ -9,6 +9,7 @@
 #include <drake/multibody/rigid_body_tree.h>
 #include <drake/common/eigen_types.h>
 #include <drake/systems/primitives/signal_log.h>
+#include <drake/common/trajectories/piecewise_polynomial.h>
 
 namespace kumonoito {
 

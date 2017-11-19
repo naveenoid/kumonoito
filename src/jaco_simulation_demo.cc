@@ -34,10 +34,11 @@ using drake::systems::VectorBase;
 namespace kinova_jaco_arm {
 namespace {
 
-    //DEFINE_double(simulation_sec, 1000, "Number of seconds to simulate");
+DEFINE_double(simulation_sec, 1.0, "Number of seconds to simulate");
+DEFINE_int32(replay_reps, -1, "No. of replays of simulation; Enter -1 for infinite replays");
 
     int DoMain(int argc, char **argv) {
-      //DRAKE_DEMAND(FLAGS_simulation_sec > 0);
+      DRAKE_DEMAND(FLAGS_simulation_sec > 0);
 
       double FLAGS_simulation_sec = 10000;
       drake::lcm::DrakeLcm lcm;
@@ -68,13 +69,10 @@ namespace {
 
       // Verifies the tree.
       const RigidBodyTree<double> &tree = plant->get_rigid_body_tree();
-     // kinova_jaco_arm::VerifyJacoTree(tree);
-
-      std::cout<<"Adding rest of the systems\n";
 
       // Creates and adds LCM publisher for visualization.
       auto visualizer =
-              builder.AddSystem<drake::systems::DrakeVisualizer>(tree, &lcm);
+              builder.AddSystem<drake::systems::DrakeVisualizer>(tree, &lcm, true /* replay simulation */);
 
       // Feeds in constant command inputs of zero.
       drake::VectorX<double> zero_values = drake::VectorX<double>::Zero(plant->get_input_size());
@@ -86,14 +84,10 @@ namespace {
       // Connects the visualizer and builds the diagram.
       builder.Connect(plant->get_output_port(0), visualizer->get_input_port(0));
 
-      std::cout<<"About to add state publisher\n";
-
       // Sets up the ROSRobotStatePublisher
       auto ros_robot_state_publisher =
           builder.AddSystem<RosRobotStatePublisher>(plant->get_rigid_body_tree(),
-                                                    &node_handle, 1 /* cache length */);
-
-      std::cout<<"statepublisher added!\n";
+                                                    &node_handle, 1 /* cache length */, true /* enable_playback */);
 
       builder.Connect(plant->get_output_port(0), ros_robot_state_publisher->get_input_port(0));
 
@@ -114,65 +108,70 @@ namespace {
       std::cout<<"Simulation about to initialize\n";
       simulator.Initialize();
 
-      std::cout<<"Simulation about to start\n";
-
       // Simulate for the desired duration.
       simulator.set_target_realtime_rate(1);
       simulator.StepTo(FLAGS_simulation_sec);
 
-      std::cout<<"Simulation complete\n";
+      std::cout<<"Simulation complete.";
 
       // Ensures the simulation was successful.
-      const Context<double> &context = simulator.get_context();
-      const ContinuousState<double>& state = context.get_continuous_state();
-      const VectorBase<double> &position_vector = state.get_generalized_position();
-      const VectorBase<double> &velocity_vector = state.get_generalized_velocity();
-
-      const int num_q = position_vector.size();
-      const int num_v = velocity_vector.size();
-
-      // Ensures the sizes of the position and velocity vectors are correct.
-      DRAKE_DEMAND(num_q == plant->get_num_positions());
-      DRAKE_DEMAND(num_v == plant->get_num_velocities());
-      DRAKE_DEMAND(num_q == num_v);
-
-      // Ensures the robot's joints are within their position limits.
-      const std::vector<std::unique_ptr<RigidBody<double>>> &bodies =
-              plant->get_rigid_body_tree().bodies;
-      for (int state_index = 0, i = 0; i < static_cast<int>(bodies.size()); ++i) {
-        // Skips rigid bodies without a parent. This includes the world.
-        if (!bodies[i]->has_parent_body()) continue;
-
-        const DrakeJoint &joint = bodies[i]->getJoint();
-        const Eigen::VectorXd &min_limit = joint.getJointLimitMin();
-        const Eigen::VectorXd &max_limit = joint.getJointLimitMax();
-
-        // Defines a joint limit tolerance. This is the amount in radians over which
-        // joint position limits can be violated and still be considered to be
-        // within the limits. Once we are able to model joint limits via
-        // constraints, we may be able to remove this tolerance value.
-        const double kJointLimitTolerance = 0.0261799;  // 1.5 degrees.
-
-        for (int j = 0; j < joint.get_num_positions(); ++j) {
-          double position = position_vector.GetAtIndex(state_index++);
-          if (position < min_limit[j] - kJointLimitTolerance) {
-            std::cerr << "ERROR: Joint " + joint.get_name() + " (DOF " +
-                         joint.get_position_name(j) +
-                         ") violated minimum position limit (" +
-                         std::to_string(position) + " < " +
-                         std::to_string(min_limit[j]) + ").";
-            return 1;
-          }
-          if (position > max_limit[j] + kJointLimitTolerance) {
-            std::cerr << "ERROR: Joint " + joint.get_name() + " (DOF " +
-                         joint.get_position_name(j) +
-                         ") violated maximum position limit (" +
-                         std::to_string(position) + " > " +
-                         std::to_string(max_limit[j]) + ").";
-            return 1;
-          }
-        }
-      }
+//      const Context<double> &context = simulator.get_context();
+//      const ContinuousState<double>& state = context.get_continuous_state();
+//      const VectorBase<double> &position_vector = state.get_generalized_position();
+//      const VectorBase<double> &velocity_vector = state.get_generalized_velocity();
+//
+//      const int num_q = position_vector.size();
+//      const int num_v = velocity_vector.size();
+//
+//      // Ensures the sizes of the position and velocity vectors are correct.
+//      DRAKE_DEMAND(num_q == plant->get_num_positions());
+//      DRAKE_DEMAND(num_v == plant->get_num_velocities());
+//      DRAKE_DEMAND(num_q == num_v);
+//
+//      // Ensures the robot's joints are within their position limits.
+//      const std::vector<std::unique_ptr<RigidBody<double>>> &bodies =
+//              plant->get_rigid_body_tree().bodies;
+//      for (int state_index = 0, i = 0; i < static_cast<int>(bodies.size()); ++i) {
+//        // Skips rigid bodies without a parent. This includes the world.
+//        if (!bodies[i]->has_parent_body()) continue;
+//
+//        const DrakeJoint &joint = bodies[i]->getJoint();
+//        const Eigen::VectorXd &min_limit = joint.getJointLimitMin();
+//        const Eigen::VectorXd &max_limit = joint.getJointLimitMax();
+//
+//        // Defines a joint limit tolerance. This is the amount in radians over which
+//        // joint position limits can be violated and still be considered to be
+//        // within the limits. Once we are able to model joint limits via
+//        // constraints, we may be able to remove this tolerance value.
+//        const double kJointLimitTolerance = 0.0261799;  // 1.5 degrees.
+//
+//        for (int j = 0; j < joint.get_num_positions(); ++j) {
+//          double position = position_vector.GetAtIndex(state_index++);
+//          if (position < min_limit[j] - kJointLimitTolerance) {
+//            std::cerr << "ERROR: Joint " + joint.get_name() + " (DOF " +
+//                         joint.get_position_name(j) +
+//                         ") violated minimum position limit (" +
+//                         std::to_string(position) + " < " +
+//                         std::to_string(min_limit[j]) + ").";
+//            return 1;
+//          }
+//          if (position > max_limit[j] + kJointLimitTolerance) {
+//            std::cerr << "ERROR: Joint " + joint.get_name() + " (DOF " +
+//                         joint.get_position_name(j) +
+//                         ") violated maximum position limit (" +
+//                         std::to_string(position) + " > " +
+//                         std::to_string(max_limit[j]) + ").";
+//            return 1;
+//          }
+//        }
+//      }
+//
+//      for (int ctr = 0; ctr< FLAGS_replay_reps || FLAGS_replay_reps !=-1; ++ctr) {
+//        std::cout<<"Replaying on RViz.";
+//        ros_robot_state_publisher->ReplayCachedSimulation();
+//        std::cout<<"Replaying on DrakeVisualizer";
+//        visualizer->ReplayCachedSimulation();
+//      }
 
       return 0;
     }
