@@ -1,0 +1,33 @@
+<launch>
+  <arg name="urdf_file" default="$(find xacro)/xacro.py '$(find kinova_description)/urdf/j2n6s300_standalone.xacro'" />
+  <param name="robot_description/jaco_1" command="$(arg urdf_file)" />
+  <param name="robot_description/jaco_2" command="$(arg urdf_file)" />
+  <node name="jaco_passive_simulation_demo" pkg="kumonoito" type="jaco_passive_simulation_demo" output="screen" />
+  <param name="use_sim_time" value="true"/>
+
+
+    <param name="robot_description/target_1" textfile="$(find kumonoito)/models/urdf/block_for_pick_and_place.urdf" />
+    <node pkg="tf" type="static_transform_publisher" name="base_broadcaster_target_1" args="0.5 -0.25 0.85 0 0 0 1 map target_1/base_link 100" />
+    <param name="robot_description/target_2" textfile="$(find kumonoito)/models/urdf/big_robot_toy.urdf" />
+    <node pkg="tf" type="static_transform_publisher" name="base_broadcaster_target_2" args="0.5 0.25 0.85 0 0 0 1 map target_2/base_link 100" />
+    <param name="robot_description/target_3" textfile="$(find kumonoito)/models/urdf/big_robot_toy.urdf" />
+    <node pkg="tf" type="static_transform_publisher" name="base_broadcaster_target_3" args="0.5 -0.15 0.85 0 0 0 1 map target_3/base_link 100" />
+    <param name="robot_description/target_4" textfile="$(find kumonoito)/models/urdf/block_for_pick_and_place_mid_size.urdf" />
+    <node pkg="tf" type="static_transform_publisher" name="base_broadcaster_target_4" args="0.75 -0.25 0.85 0 0 0 1 map target_4/base_link 100" />
+
+    <param name="robot_description/table" textfile="$(find kumonoito)/models/urdf/robot_table.urdf" />
+    <node pkg="tf" type="static_transform_publisher" name="base_broadcaster_table" args="0 0 0.75 0 0 0 1 map table/base_link 100" />
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_pub_1">
+    <remap from="robot_description" to="robot_description/jaco_1"/>
+    <param name="tf_prefix" value="/jaco_1"/>
+  </node>
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_pub_2">
+    <remap from="robot_description" to="robot_description/jaco_2"/>
+    <param name="tf_prefix" value="/jaco_2"/>
+  </node>
+  <node pkg="tf" type="static_transform_publisher" name="base_broadcaster_1" args="0 -0.5 0.75 0 0 0 1 map jaco_1/world 100" />
+      <node pkg="tf" type="static_transform_publisher" name="base_broadcaster_2" args="0 0.5 0.75 0 0 0 1 map jaco_2/world 100" />
+
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find kumonoito)/rviz_cfg/robot_table.rviz"/>
+</launch>

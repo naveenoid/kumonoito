@@ -6,6 +6,7 @@ project(kumonoito)
 
 find_package(drake CONFIG REQUIRED)
 
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -138,28 +139,56 @@ add_definitions(-std=c++11)
 #   src/${PROJECT_NAME}/kumonoito.cc
 # )
 
-add_executable(kumonoito src/ros_demo_publisher.cc)
-target_link_libraries(kumonoito drake::drake ${catkin_LIBRARIES})
-add_dependencies(kumonoito beginner_tutorials_generate_messages_cpp)
-
-add_executable(listener src/ros_demo_listener.cc)
-target_link_libraries(listener ${catkin_LIBRARIES})
-add_dependencies(listener beginner_tutorials_generate_messages_cpp)
-
-add_library(jaco_common src/jaco_common.cc)
+add_library(jaco_common src/jaco_common.cc
+        src/controlled_jaco_simulation.cc
+        src/ros_subscriber_system.cc src/ros_publisher_system.cc src/robot_table_planner.cc)
 target_link_libraries(jaco_common drake::drake)
 
-add_library(ros_robot_state_publisher src/ros_robot_state_publisher.cc)
-target_link_libraries(ros_robot_state_publisher
+add_library(ros_joint_state_publisher src/ros_joint_state_publisher.cc)
+target_link_libraries(ros_joint_state_publisher
         drake::drake
         ${catkin_LIBRARIES})
 
-add_executable(jaco_sim src/jaco_simulation_demo.cc)
-target_link_libraries(jaco_sim
+add_library(ros_tf_publisher src/ros_tf_publisher.cc)
+target_link_libraries(ros_tf_publisher
+        drake::drake
+        ${catkin_LIBRARIES})
+
+add_library(ros_publisher_system src/ros_publisher_system.cc)
+target_link_libraries(ros_publisher_system
+        drake::drake
+        ${catkin_LIBRARIES})
+
+
+add_library(ros_subscriber_system src/ros_subscriber_system.cc)
+target_link_libraries(ros_subscriber_system
+        drake::drake
+        ${catkin_LIBRARIES})
+
+
+add_executable(jaco_passive_simulation_demo src/jaco_passive_simulation_demo.cc)
+target_link_libraries(jaco_passive_simulation_demo
         jaco_common
         drake::drake
-        ros_robot_state_publisher
+#        gflags
+        ros_joint_state_publisher
         ${catkin_LIBRARIES})
+
+add_executable(controlled_jaco_simulation_demo src/controlled_jaco_simulation.cc)
+target_link_libraries(controlled_jaco_simulation_demo
+        jaco_common
+        drake::drake
+        ros_joint_state_publisher
+        ros_tf_publisher
+        ros_subscriber_system)
+#
+## WIP : Planner process that publishes JointTrajectory
+#add_executable(robot_table_planner src/robot_table_planner.cc)
+#target_link_libraries(robot_table_planner
+#        jaco_common
+#        drake::drake
+#        ros_joint_state_publisher
+#        ros_publisher_system)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
