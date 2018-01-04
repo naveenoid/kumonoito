@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   genmsg
-  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -103,7 +102,7 @@ find_package(catkin REQUIRED COMPONENTS
 #add_service_files(DIRECTORY srv FILES AddTwoInts.srv)
 
 ## Generate added messages and services
-generate_messages(DEPENDENCIES std_msgs)
+#generate_messages(DEPENDENCIES std_msgs)
 
 ###################################
 ## catkin specific configuration ##
@@ -118,7 +117,6 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES kumonoito
   CATKIN_DEPENDS roscpp std_msgs genmsg
-  DEPENDS system_lib
 )
 
 ###########
@@ -138,6 +136,8 @@ add_definitions(-std=c++11)
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/kumonoito.cc
 # )
+
+# Libraries
 
 add_library(jaco_common src/jaco_common.cc
         src/controlled_jaco_simulation.cc
@@ -165,6 +165,11 @@ target_link_libraries(ros_subscriber_system
         drake::drake
         ${catkin_LIBRARIES})
 
+install(TARGETS jaco_common ros_joint_state_publisher ros_tf_publisher ros_publisher_system ros_subscriber_system
+  DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+# Binaries
 
 add_executable(jaco_passive_simulation_demo src/jaco_passive_simulation_demo.cc)
 target_link_libraries(jaco_passive_simulation_demo
@@ -181,6 +186,11 @@ target_link_libraries(controlled_jaco_simulation_demo
         ros_joint_state_publisher
         ros_tf_publisher
         ros_subscriber_system)
+
+install(TARGETS jaco_passive_simulation_demo controlled_jaco_simulation_demo
+   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 #
 ## WIP : Planner process that publishes JointTrajectory
 #add_executable(robot_table_planner src/robot_table_planner.cc)
@@ -218,6 +228,10 @@ target_link_libraries(controlled_jaco_simulation_demo
 #############
 ## Install ##
 #############
+
+install(DIRECTORY launch models
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
